@@ -4,6 +4,7 @@ from django.utils.encoding import force_bytes
 from nameparser import HumanName
 from pylti.common import LTIException
 from django.contrib.auth import get_user_model
+import traceback
 
 # Fetch Custom Auth User Model
 User = get_user_model()
@@ -71,13 +72,18 @@ class LTIBackend(object):
         try:
             lti.verify(request)
             return self.find_or_create_user(request, lti)
-        except LTIException as e:
+        except LTIException:
             lti.clear_session(request)
-            print(e)
+            print("LTI verification failed\n", traceback.print_exc())
             return None
+        except Exception as e:
+            print(e, "\n", traceback.print_exc())
 
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
+            print("User Does not Exist\n", traceback.print_exc())
             return None
+        except Exception as e:
+            print(e, "\n", traceback.print_exc())
